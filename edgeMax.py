@@ -1,11 +1,8 @@
 # load and display an image with Matplotlib
 import numpy as np
-
 from PIL import Image
 from pathlib import Path
 from scipy import ndimage as nd
-from numpy import ma as ma
-import os
 import glob
 
 # folder with images to be processed
