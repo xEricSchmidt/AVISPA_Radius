@@ -26,62 +26,50 @@ def get_corner_radius(im_path):
         Image.open(im_path).save(str(current_dir / f'{filename}.png'))
         file_extension = '.png'
         im_path = str(filename + file_extension )
-        return im_path, file_extension
 
-    # load images in folder as greyscale
-    for img in glob.glob(str(current_dir / "*.png")):
-        filename = Path(img).stem
-        # load image as greyscale
-        image = Image.open(img).convert('L')
-        # save greyscale image as a copy
-        image.save(str(out_dir_grey / f'{filename}_grey.png'))
-        # convert image to numpy array
-        data = asarray(image)
-        # trim numpy array (coordinates from GIMP, width 1100-1570, height 222-777)
-        dataTrim = data[222:777, 1100:1570]
-        # save trimmed numpy array as binary
-        np.save(str(out_dir_np_trim / f'{filename}_grey_trim.npy'), dataTrim)
-        # convert trimmed numpy array to .png and save
-        Image.fromarray(dataTrim).save(str(out_dir_grey_trim / f'{filename}_grey_trim.png'))
+    image = Image.open(im_path).convert('L')  # load image as greyscale
+    data = asarray(image)  # convert image to numpy array
 
-    def first_nonzero(arr, axis, invalid_val=-1):
-        mask = arr != 0
-        return np.where(mask.any(axis=axis), mask.argmax(axis=axis), invalid_val)
+    x_min_trim = 222  # measure coordinates close to insert edges for center image of K-Lens-Compound image
+    x_max_trim = 777
+    y_min_trim = 1100
+    y_max_trim = 1570
 
-    # load images in folder as greyscale
-    for arr in glob.glob(str(current_dir / "*.npy")):
-        filename = Path(arr).stem
-        image = np.load(arr)
-        # all pixels with brightness below 150 are set to black
-        image[image < 150] = 0
-        image[image >= 150] = 255
-        # rotate image 50 deg ccw (CNGA edge-angle is 80 deg, the edge is now fully horizontal)
-        rotateArr = nd.rotate(image, 50)
-        Image.fromarray(rotateArr).save(str(current_dir / f'{filename}_rotate.png'))
-        # get index of first nonzero element in each row, set others to 300 (above white to allow for minimum)
-        firsts = first_nonzero(rotateArr, axis=1, invalid_val=300)
-        # find minimum x-index along all rows and return it
+    data_trimmed = data[x_min_trim:x_max_trim, y_min_trim:y_max_trim]  # trim numpy array (coordinates from GIMP, width 1100-1570, height 222-777)
 
-        xCorner = min(firsts)
-        if xCorner <= 55:
-            rad = '0.8 mm'
-        elif 70 >= xCorner > 55:
-            rad = '1.2 mm'
-        else:
-            rad = '1.6 mm'
-        print(str(filename) + ' has a corner radius of ' + rad)
+    data_trimmed[data_trimmed < 150] = 0  # all pixels with brightness below 150 are set to black
+    data_trimmed[data_trimmed >= 150] = 255  # all pixels with brightness above 150 are set to white
 
+    data_rotated = nd.rotate(data_trimmed, 50)  # rotate image 50 deg ccw (CNGA edge-angle is 80 deg)
+    Image.fromarray(data_rotated).save(str(current_dir / f'{filename}_rotated.png'))  # save image to measure corner positions
 
+    cutoff_08_12 = 55  # measure coordinates for leftmost edge in rotated image (leave some space for fluctuation)
+    cutoff_12_16 = 70
 
+    firsts = first_nonzero(data_rotated, axis=1, invalid_val=300) # get index of first nonzero element in each row, set zeroes to 300
+    x_corner = min(firsts)  # leftmost nonzero point represents corner coordinate in pixel
+    if x_corner <= cutoff_08_12:
+        rad = '0.8 mm'
+    elif cutoff_12_16 >= x_corner > cutoff_08_12:
+        rad = '1.2 mm'
+    else:
+        rad = '1.6 mm'
 
     print("Image processing finished.")
-    return cornerRadius
+    return rad, filename
+
+
+def first_nonzero(arr, axis, invalid_val=-1):
+    """Find first nonzero Element in each column (0) or row (1) of a numpy array"""
+    mask = arr != 0
+    return np.where(mask.any(axis=axis), mask.argmax(axis=axis), invalid_val)
 
 
 def main():
-    message = "Running as Script"
-    get_corner_radius('CNGA RADIO 1.2mm.bmp_sub5.bmp')
-    print(message)
+    file_name = 'CNGA RADIO 1.2mm.bmp_sub5.bmp'  # file in same folder as script
+    radius, filename = get_corner_radius(file_name)
+    out_str = str(filename + ' has a corner radius of ' + radius)
+    print(out_str)
 
 
 if __name__ == "__main__":
