@@ -32,5 +32,11 @@ for arr in glob.glob(str(current_dir / "*.npy")):
     # find minimum x-index along all rows and return it
     # TODO get thresholds for different edge-radii from GIMP and implement classification
     # TODO double check final images for non zero/255 pixels
-    match
-    print(str(filename) + ' ' + str(min(firsts)))
+    xCorner = min(firsts)
+    if xCorner <= 55:
+        rad = '0.8 mm'
+    elif 70 >= xCorner > 55:
+        rad = '1.2 mm'
+    else:
+        rad = '1.6 mm'
+    print(str(filename) + ' has a corner radius of ' + rad)
