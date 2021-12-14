@@ -5,7 +5,6 @@ for CNGA inserts
 =====================================================
 """
 
-import glob
 import os
 import numpy as np
 from numpy import asarray
@@ -46,7 +45,7 @@ def get_corner_radius(im_path):
     cutoff_08_12 = 55  # measure coordinates for leftmost edge in rotated image (leave some space for fluctuation)
     cutoff_12_16 = 70
 
-    firsts = first_nonzero(data_rotated, axis=1, invalid_val=300) # get index of first nonzero element in each row, set zeroes to 300
+    firsts = first_nonzero(data_rotated, axis=1, invalid_val=300)  # get index of first nonzero element in each row, set zeroes to 300
     x_corner = min(firsts)  # leftmost nonzero point represents corner coordinate in pixel
     if x_corner <= cutoff_08_12:
         rad = '0.8 mm'
