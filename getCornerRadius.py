@@ -66,7 +66,7 @@ def first_nonzero(arr, axis, invalid_val=-1):
 
 
 def main():
-    file_name = 'CNGA RADIO 1.2mm.bmp_sub5.bmp'  # file in same folder as script
+    file_name = 'CNGA RADIO 0.8mm.bmp_sub5.bmp'  # file in same folder as script
     radius, filename = get_corner_radius(file_name)
     out_str = str(filename + ' has a corner radius of ' + radius)
     print(out_str)
